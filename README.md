@@ -18,3 +18,6 @@ Run the following command in the shell/command line:
 ```sh 
 $ nim c impulse_engine.nim
 ```
+On Windows (tested with mingw64-32) it should work out of the box, provided you have everything needed for openGL.<br>
+On GNU/Linux (tested on Lubuntu) you will probably need to install libmesa, Xcursor, ... development packages and
+I also had to create symlinks for libGL.so, libXi.so and libXxf86v.so.
