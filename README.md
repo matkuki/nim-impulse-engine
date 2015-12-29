@@ -9,6 +9,7 @@ zlib license (check the License.txt file for more details)
 ### Used libraries (included in the source) ###
 - nim-glfw (https://github.com/ephja/nim-glfw - thanks to ephja for glfw support and troubleshooting)
 - opengl (https://github.com/nim-lang/opengl)
+- x11 (https://github.com/nim-lang/x11)
 <br><br>
 
 ### Compilation: ###
