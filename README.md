@@ -21,3 +21,6 @@ $ nim c impulse_engine.nim
 On Windows (tested with mingw64-32) it should work out of the box, provided you have everything needed for openGL.<br>
 On GNU/Linux (tested on Lubuntu) you will probably need to install libmesa, Xcursor, ... development packages and
 I also had to create symlinks for libGL.so, libXi.so and libXxf86v.so.
+
+#### Screenshot: ####
+<img src="https://github.com/matkuki/Nim-Impulse-Engine/blob/master/screenshot.jpg" align="top" width="600" height="480">
