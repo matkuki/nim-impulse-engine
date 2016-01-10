@@ -32,7 +32,8 @@ import
     opengl,
     glu
 
-const 
+const
+    VERSION = "1.0.0"
     WINDOW_SIZE = (w: 800, h: 600)
     FRAME_RATE = 60
     FRAME_TIME = 1.0f/float(FRAME_RATE)
@@ -143,7 +144,7 @@ glfw.init()
 # Initialize the main window 
 win = newGlWin(
     dim = (w: WINDOW_SIZE.w, h: WINDOW_SIZE.h),
-    title = "Impulse Engine (Nim)",
+    title = "Impulse Engine (Nim) Ver.:$1" % VERSION,
     fullscreen = nilMonitor(), # No monitor specified; don't go fullscreen.
     shareResourcesWith = nilWin(), # Don't share resources.
     visible = true,
@@ -174,7 +175,6 @@ setControlCHook(proc() {.noconv.} = done = true)
 # Set up event handlers, context and openGL
 win.mouseBtnCb = mouseBtnCb
 win.keyCb = keyCb
-#win.winRefreshCb = physicsLoop # Set the window display function
 win.makeContextCurrent()
 initOpenGL()
 # Set the swap interval for the current context:
