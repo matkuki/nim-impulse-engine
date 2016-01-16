@@ -19,7 +19,7 @@ Installation can be done using the Nimble package manager from the shell/command
 ```sh 
 $ nimble install impulse_engine
 ```
-<br><br>
+<br>
 
 ### Compilation: ###
 
