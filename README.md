@@ -12,6 +12,15 @@ zlib license (check the License.txt file for more details)
 - x11 (https://github.com/nim-lang/x11)
 <br><br>
 
+### Installation: ###
+[![nimble](https://raw.githubusercontent.com/yglukhov/nimble-tag/master/nimble.png)](https://github.com/yglukhov/nimble-tag)
+<br>
+Installation can be done using the Nimble package manager from the shell/command line (Nimble has to be installed):
+```sh 
+$ nimble install impulse_engine
+```
+<br><br>
+
 ### Compilation: ###
 
 Run the following command in the shell/command line:
