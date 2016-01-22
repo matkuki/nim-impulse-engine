@@ -34,3 +34,5 @@ If anyone is willing to try it on another platform, any feedback would be greatl
 
 #### Screenshot: ####
 <img src="https://github.com/matkuki/Nim-Impulse-Engine/blob/master/screenshot.jpg" align="top" width="600" height="480">
+### Video: ###
+https://www.youtube.com/watch?v=AzA_owsZU04
