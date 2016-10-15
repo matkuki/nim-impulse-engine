@@ -6,7 +6,7 @@ Thanks to Randy for a great educational tool.
 ### License: ###
 zlib license (check the License.txt file for more details)
 <br><br>
-### Used libraries (included in the source): ###
+### Used libraries: ###
 - nim-glfw (https://github.com/ephja/nim-glfw - thanks to ephja for glfw support and troubleshooting)
 - opengl (https://github.com/nim-lang/opengl)
 - x11 (https://github.com/nim-lang/x11)
