@@ -18,7 +18,7 @@
 ##
 ##    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
 
-import math
+import math, random
 
 
 const
@@ -39,7 +39,7 @@ type
 proc set*(inVector: var Vec, inX: float, inY: float) =
     inVector.x = inX
     inVector.y = inY
-    
+
 proc `-`*(inVector: Vec): Vec =
     result = Vec(x: -inVector.x, y: -inVector.y)
 
@@ -195,7 +195,7 @@ proc round*(number: float): int =
     result = int(number + 0.5f)
 
 proc random*(low, high: float): float =
-    result = math.random(RAND_MAX)
+    result = random.random(RAND_MAX)
     result /= RAND_MAX
     result = (high - low) * result + low
 
