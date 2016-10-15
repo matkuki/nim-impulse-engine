@@ -18,7 +18,9 @@
 ##
 ##    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
 
-import math, random
+import 
+    math, 
+    random
 
 
 const

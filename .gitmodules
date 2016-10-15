@@ -1,9 +1,0 @@
-[submodule "x11"]
-	path = x11
-	url = https://github.com/nim-lang/x11.git
-[submodule "glfw"]
-	path = glfw
-	url = https://github.com/ephja/nim-glfw.git
-[submodule "opengl"]
-	path = opengl
-	url = https://github.com/nim-lang/opengl.git
