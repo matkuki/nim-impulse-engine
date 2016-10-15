@@ -1,0 +1,3 @@
+[submodule "x11"]
+	path = x11
+	url = https://github.com/nim-lang/x11.git
