@@ -4,3 +4,6 @@
 [submodule "glfw"]
 	path = glfw
 	url = https://github.com/ephja/nim-glfw.git
+[submodule "opengl"]
+	path = opengl
+	url = https://github.com/nim-lang/opengl.git
