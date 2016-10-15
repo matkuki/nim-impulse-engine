@@ -41,7 +41,7 @@ const
     # refresh rate! If it's lower, everything will move faster
     VSYNC = true
 
-var 
+var
     done = false # Application exit flag
     frameStepping = false
     canStep = false
@@ -52,7 +52,7 @@ var
     bodyCounter: int = 0
 
 
-proc initOpenGL() = 
+proc initOpenGL() =
     loadExtensions()
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
@@ -62,7 +62,7 @@ proc initOpenGL() =
     glPushMatrix()
     glLoadIdentity()
 
-proc mouseBtnCb(win: Win, button: MouseBtn, 
+proc mouseBtnCb(win: Win, button: MouseBtn,
                 pressed: bool, modKeys: ModifierKeySet) =
     # Get cursor position and adjust it to openGL settings
     var curPos = win.cursorPos()
@@ -90,7 +90,7 @@ proc mouseBtnCb(win: Win, button: MouseBtn,
                 echo "Polygon added"
                 bodycounter += 1
                 echo "Total number of bodies:", bodycounter
-        
+
             of mbRight:
                 # Create random circle
                 var
@@ -99,11 +99,11 @@ proc mouseBtnCb(win: Win, button: MouseBtn,
                 echo "Circle added"
                 bodycounter += 1
                 echo "Total number of bodies:", bodycounter
-            
+
             else:
                 discard
 
-proc keyCb(win: Win, key: Key, scanCode: int, 
+proc keyCb(win: Win, key: Key, scanCode: int,
            action: KeyAction, modKeys: ModifierKeySet) =
     # Filter only keyUp events
     if action != kaUp:
@@ -138,10 +138,10 @@ proc physicsLoop() =
             canStep = false
             mainScene.step(FRAME_TIME)
     mainScene.render()
-    
+
 # Initialize GLFW
 glfw.init()
-# Initialize the main window 
+# Initialize the main window
 win = newGlWin(
     dim = (w: WINDOW_SIZE.w, h: WINDOW_SIZE.h),
     title = "Impulse Engine (Nim) Ver.:$1" % VERSION,
@@ -227,7 +227,7 @@ while not done and not win.shouldClose:
         var sleepTime = int(1000*(FRAME_TIME - glfw.getTime())) - 1
         if sleepTime > 0:
             os.sleep(sleepTime)
-    
+
 # Cleanup everything
 win.destroy()
 glfw.terminate()
