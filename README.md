@@ -13,6 +13,7 @@ zlib license (check the License.txt file for more details)
 - opengl (https://github.com/nim-lang/opengl)
 - x11 (https://github.com/nim-lang/x11)
 - freeglut (http://freeglut.sourceforge.net/) or glut32 on Windows
+
 Additional information:
 - For `nimgl` you will need the GLFW3 shared library (precompiled libraries can be found here: https://www.glfw.org/download.html)
 - For `freeglut` you will need a recent shared library (precompiled libraries can be found here: https://www.transmissionzero.co.uk/software/freeglut-devel/)
