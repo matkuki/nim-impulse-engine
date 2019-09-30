@@ -67,9 +67,9 @@ proc initOpenGL() =
     glutInit()
 
 proc mouseCallback(window: GLFWWindow,
-                   button: GLFWMouseButton,
-                   action: GLFWMouseAction,
-                   modKeys: GLFWKeyMod) {.cdecl.} =
+                   button: int32,
+                   action: int32,
+                   modKeys: int32) {.cdecl.} =
     # Get cursor position and adjust it to openGL settings
     
     var
@@ -78,9 +78,9 @@ proc mouseCallback(window: GLFWWindow,
     x /= 10.0f
     y /= 10.0f
     # Filter only mouse press events
-    if action == GLFWMouseAction.maRelease:
+    if action == GLFW_RELEASE:
         case button:
-            of mbLeft:
+            of Button1:
                 # Create random polygon
                 var
                     poly: Polygon = newPolygon()
@@ -100,7 +100,7 @@ proc mouseCallback(window: GLFWWindow,
                 displayString(1, 6, "Polygon added", 2)
                 displayString(4, 8, fmt"Total number of bodies: {bodycounter}", 2)
 
-            of mbRight:
+            of Button2:
                 # Create random circle
                 var
                     c: Circle = newCircle(ie_math.random(1.0f, 3.0f))
@@ -113,29 +113,29 @@ proc mouseCallback(window: GLFWWindow,
                 discard
 
 proc keyCallback(window: GLFWWindow,
-                 key: GLFWKey,
+                 key: int32,
                  scanCode: int32,
-                 action: GLFWKeyAction,
-                 modKeys: GLFWKeyMod) {.cdecl.} =
+                 action: int32,
+                 modKeys: int32) {.cdecl.} =
     # Filter only keyUp events
-    if action == kaRelease:
+    if action == GLFW_RELEASE:
         case key:
-            of keyEscape:
+            of GLFWKey.Escape:
                 window.setWindowShouldClose(true)
-            of keyF4:
-                if (int(modKeys) and int(kmAlt)) != 0:
+            of GLFWKey.F4:
+                if (int(modKeys) and int(GLFWModAlt)) != 0:
                     window.setWindowShouldClose(true)
-            of keyF:
+            of GLFWKey.F:
                 frameStepping = not frameStepping
-            of keyRight:
+            of GLFWKey.Right:
 #                mainScene.bodies[mainScene.bodies.high].velocity += Vec(x:2.0f, y:0.0f)
                 mainScene.bodies[mainScene.bodies.high].angularVelocity += 1.0
-            of keyLeft:
+            of GLFWKey.Left:
 #                mainScene.bodies[mainScene.bodies.high].velocity -= Vec(x:2.0f, y:0.0f)
                 mainScene.bodies[mainScene.bodies.high].angularVelocity -= 1.0
-            of keyUp:
+            of GLFWKey.Up:
                 mainScene.bodies[mainScene.bodies.high].velocity += Vec(x:0.0f, y: -5.0f)
-            of keySpace:
+            of GLFWKey.Space:
                 canStep = true
             else:
                 discard
@@ -151,7 +151,7 @@ proc physicsLoop() =
             mainScene.step(FRAME_TIME)
     mainScene.render()
 
-proc errorCallback(error: GLFWErrorCode, description: cstring) {.cdecl.} =
+proc errorCallback(error: int32, description: cstring) {.cdecl.} =
     echo fmt("[ERROR LEVEL {error}]\n:  {description}")
 
 
@@ -171,7 +171,7 @@ proc main() =
         raise newException(Exception, "Error creating GLFW window!")
     # Center windowdow to screen
     monitor = glfwGetPrimaryMonitor()
-    videoMode = getVidMode(monitor)
+    videoMode = getVideoMode(monitor)
     window.setWindowPos(
         int32(videoMode.width/2 - WINDOW_SIZE.w/2),
         int32(videoMode.height/2 - WINDOW_SIZE.h/2)
