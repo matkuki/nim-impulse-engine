@@ -7,7 +7,7 @@
 ##
 ##    Permission is granted to anyone to use this software for any purpose,
 ##    including commercial applications, and to alter it and redistribute it
-##    freely, subject to the following restrictions:
+##    freely, subject to the followindowg restrictions:
 ##      1. The origin of this software must not be misrepresented; you must not
 ##         claim that you wrote the original software. If you use this software
 ##         in a product, an acknowledgment in the product documentation would be
@@ -21,21 +21,23 @@
 import
     os,
     strutils,
+    strformat,
     times,
     math,
+    options,
     ie_math,
     shapes,
     manifold,
     scene,
-    glfw,
-    glfw/wrapper,
+    rendering,
+    nimgl/glfw,
     opengl,
-    glu
+    opengl/glu,
+    opengl/glut
 
 const
-    VERSION = "1.0.0"
-    WINDOW_SIZE = (w: 800, h: 600)
-    FRAME_RATE = 60
+    VERSION = "1.1.0"
+    WINDOW_SIZE = (w: 800.int32, h: 600.int32)
     FRAME_TIME = 1.0f/float(FRAME_RATE)
     # If the VSYNC value is true, the FRAME_RATE has to be set to the monitor
     # refresh rate! If it's lower, everything will move faster
@@ -45,10 +47,11 @@ var
     done = false # Application exit flag
     frameStepping = false
     canStep = false
-    win: glfw.Win
+    window: GLFWWindow
     centerCircle = newCircle(5.0f)
     mainScene = newScene(10)
-    videoMode: VidMode
+    monitor: GLFWMonitor
+    videoMode: ptr GLFWVidMode
     bodyCounter: int = 0
 
 
@@ -61,15 +64,21 @@ proc initOpenGL() =
     glMatrixMode(GL_MODELVIEW)
     glPushMatrix()
     glLoadIdentity()
+    glutInit()
 
-proc mouseBtnCb(win: Win, button: MouseBtn,
-                pressed: bool, modKeys: ModifierKeySet) =
+proc mouseCallback(window: GLFWWindow,
+                   button: GLFWMouseButton,
+                   action: GLFWMouseAction,
+                   modKeys: GLFWKeyMod) {.cdecl.} =
     # Get cursor position and adjust it to openGL settings
-    var curPos = win.cursorPos()
-    curPos.x /= 10.0f
-    curPos.y /= 10.0f
+    
+    var
+        x, y: float64
+    window.getCursorPos(addr(x), addr(y))
+    x /= 10.0f
+    y /= 10.0f
     # Filter only mouse press events
-    if pressed == true:
+    if action == GLFWMouseAction.maRelease:
         case button:
             of mbLeft:
                 # Create random polygon
@@ -82,37 +91,40 @@ proc mouseBtnCb(win: Win, button: MouseBtn,
                 for i in 0..vertices.high:
                     vertices[i].set(ie_math.random(-e, e), ie_math.random(-e, e))
                 poly.set(vertices, count)
-                b = mainScene.add(poly, curPos.x, curPos.y)
+                b = mainScene.add(poly, x, y)
                 b.setOrient(ie_math.random(-ie_math.PI, ie_math.PI))
                 b.restitution = 0.2f
                 b.dynamicFriction = 0.2f
                 b.staticFriction = 0.4f
-                echo "Polygon added"
                 bodycounter += 1
-                echo "Total number of bodies:", bodycounter
+                displayString(1, 6, "Polygon added", 2)
+                displayString(4, 8, fmt"Total number of bodies: {bodycounter}", 2)
 
             of mbRight:
                 # Create random circle
                 var
                     c: Circle = newCircle(ie_math.random(1.0f, 3.0f))
-                discard mainScene.add(c, curPos.x, curPos.y)
-                echo "Circle added"
+                discard mainScene.add(c, x, y)
                 bodycounter += 1
-                echo "Total number of bodies:", bodycounter
+                displayString(1, 6, "Circle added", 2)
+                displayString(4, 8, fmt"Total number of bodies: {bodycounter}", 2)
 
             else:
                 discard
 
-proc keyCb(win: Win, key: Key, scanCode: int,
-           action: KeyAction, modKeys: ModifierKeySet) =
+proc keyCallback(window: GLFWWindow,
+                 key: GLFWKey,
+                 scanCode: int32,
+                 action: GLFWKeyAction,
+                 modKeys: GLFWKeyMod) {.cdecl.} =
     # Filter only keyUp events
-    if action != kaUp:
+    if action == kaRelease:
         case key:
             of keyEscape:
-                win.shouldClose = true
+                window.setWindowShouldClose(true)
             of keyF4:
-                if mkAlt in modKeys:
-                    win.shouldClose = true
+                if (int(modKeys) and int(kmAlt)) != 0:
+                    window.setWindowShouldClose(true)
             of keyF:
                 frameStepping = not frameStepping
             of keyRight:
@@ -139,96 +151,104 @@ proc physicsLoop() =
             mainScene.step(FRAME_TIME)
     mainScene.render()
 
-# Initialize GLFW
-glfw.init()
-# Initialize the main window
-win = newGlWin(
-    dim = (w: WINDOW_SIZE.w, h: WINDOW_SIZE.h),
-    title = "Impulse Engine (Nim) Ver.:$1" % VERSION,
-    fullscreen = nilMonitor(), # No monitor specified; don't go fullscreen.
-    shareResourcesWith = nilWin(), # Don't share resources.
-    visible = true,
-    decorated = true,
-    resizable = false,
-    stereo = false,
-    srgbCapableFramebuf = false,
-    bits = (r: 8, g: 8, b: 8, a: 8, stencil: 8, depth: 24),
-    accumBufBits = (r: 0, g: 0, b: 0, a: 0),
-    nAuxBufs = 0,
-    nMultiSamples = 0,
-    refreshRate = FRAME_RATE, # 0 - use the current monitor refresh rate.
-    version = glv30,
-    forwardCompat = false,
-    debugContext = false,
-    profile = glpAny,
-    robustness = glrNone
-)
-# Center window to screen
-videoMode = glfw.vidMode(glfw.getPrimaryMonitor())
-win.pos = (x: int(videoMode.dim.w/2 - WINDOW_SIZE.w/2),
-           y: int(videoMode.dim.h/2 - WINDOW_SIZE.h/2))
+proc errorCallback(error: GLFWErrorCode, description: cstring) {.cdecl.} =
+    echo fmt("[ERROR LEVEL {error}]\n:  {description}")
 
-# Set the CTRL+C hook that raises the done flag
-# (terminal window has to be focused!)
-setControlCHook(proc() {.noconv.} = done = true)
 
-# Set up event handlers, context and openGL
-win.mouseBtnCb = mouseBtnCb
-win.keyCb = keyCb
-win.makeContextCurrent()
-initOpenGL()
-# Set the swap interval for the current context:
-#   0 - no syncing
-#   1 - syncs the win.update to 1 screen refresh
-when VSYNC == true:
-    glfw.swapInterval(1)
-else:
-    glfw.swapInterval(0)
-
-# Initialize static(immovable) objects in the scene
-var b: Body
-# Middle circle
-b = mainScene.add(centerCircle, 40.0f, 40.0)
-b.setStatic()
-# Bottom platform
-var poly: Polygon = newPolygon()
-poly.setBox(30.0f, 1.0f)
-b = mainScene.add(poly, 40.0f, 55.0f)
-b.setStatic()
-b.setOrient(0)
-# Left wall
-poly = newPolygon()
-poly.setBox(1.0f, 5.0f)
-b = mainScene.add(poly, 11.0f, 49.0f)
-b.setStatic()
-b.setOrient(0)
-# Right wall
-poly = newPolygon()
-poly.setBox(1.0f, 5.0f)
-b = mainScene.add(poly, 69.0f, 49.0f)
-b.setStatic()
-b.setOrient(0)
-
-# Main loop
-while not done and not win.shouldClose:
+proc main() =
+    # Initialize GLFW
+    if not glfwInit():
+        raise newException(Exception, "GLFW failed to initialize!")
+    # Initialize the main windowdow
+    window = glfwCreateWindow(
+        WINDOW_SIZE.w,
+        WINDOW_SIZE.h,
+        "Impulse Engine (Nim) Ver.:$1" % VERSION,
+        nil,
+        nil
+    )
+    if window == nil:
+        raise newException(Exception, "Error creating GLFW window!")
+    # Center windowdow to screen
+    monitor = glfwGetPrimaryMonitor()
+    videoMode = getVidMode(monitor)
+    window.setWindowPos(
+        int32(videoMode.width/2 - WINDOW_SIZE.w/2),
+        int32(videoMode.height/2 - WINDOW_SIZE.h/2)
+    )
+    
+    # Set the CTRL+C hook that raises the done flag
+    # (terminal windowdow has to be focused!)
+    setControlCHook(proc() {.noconv.} = done = true)
+    
+    # Set callbacks
+    discard glfwSetErrorCallback(errorCallback)
+    discard setKeyCallback(window, keyCallback)
+    discard setMouseButtonCallback(window, mouseCallback)
+    
+    # Set up context and openGL
+    window.makeContextCurrent()
+    initOpenGL()
+    # Set the swap interval for the current context:
+    #   0 - no syncing
+    #   1 - syncs the window.update to 1 screen refresh
     when VSYNC == true:
-        ## This consumes 100% of one CPU core on Windows OS, until another application
-        ## needs more of the CPU (it seems to be a Windows driver issue). Once the
-        ## CPU usage falls, it stays at the correct level!
-        physicsLoop() # Impulse engine routine
-        win.update() # Buffer swap + event poll.
+        glfwSwapInterval(1)
     else:
-        ## If someone knows a better delay mechanism,
-        ## please contact me or open an issue on Github!
-        glfw.setTime(0)
-        physicsLoop() # Impulse engine routine
-        win.update() # Buffer swap + event poll.
-        # Delay for frame syncing
-        var sleepTime = int(1000*(FRAME_TIME - glfw.getTime())) - 1
-        if sleepTime > 0:
-            os.sleep(sleepTime)
+        glfwSwapInterval(0)
+    
+    # Initialize static(immovable) objects in the scene
+    var b: Body
+    # Middle circle
+    b = mainScene.add(centerCircle, 40.0f, 40.0)
+    b.setStatic()
+    # Bottom platform
+    var poly: Polygon = newPolygon()
+    poly.setBox(30.0f, 1.0f)
+    b = mainScene.add(poly, 40.0f, 55.0f)
+    b.setStatic()
+    b.setOrient(0)
+    # Left wall
+    poly = newPolygon()
+    poly.setBox(1.0f, 5.0f)
+    b = mainScene.add(poly, 11.0f, 49.0f)
+    b.setStatic()
+    b.setOrient(0)
+    # Right wall
+    poly = newPolygon()
+    poly.setBox(1.0f, 5.0f)
+    b = mainScene.add(poly, 69.0f, 49.0f)
+    b.setStatic()
+    b.setOrient(0)
+    
+    displayString(1, 2, "Left click to spawn a polygon")
+    displayString(1, 4, "Right click to spawn a circle")
+    
+    # Main loop
+    while not done and not window.windowShouldClose:
+        when VSYNC == true:
+            ## This consumes 100% of one CPU core on Windows Vista, until another application
+            ## needs more of the CPU (it seems to be a Windows driver issue). Once the
+            ## CPU usage falls, it stays at the correct level!
+            physicsLoop() # Impulse engine routine
+        else:
+            ## If someone knows a better delay mechanism,
+            ## please contact me or open an issue on Github!
+            glfwSetTime(0)
+            physicsLoop() # Impulse engine routine
+            # Delay for frame syncing
+            var sleepTime = int(1000*(FRAME_TIME - glfwGetTime())) - 1
+            if sleepTime > 0:
+                os.sleep(sleepTime)
+        # Strings
+        renderStrings()
+        # Update everything
+        window.swapBuffers()
+        glfwPollEvents()
+    
+    # Cleanup everything
+    window.destroyWindow()
+    glfwTerminate()
+    echo "Application closed"
 
-# Cleanup everything
-win.destroy()
-glfw.terminate()
-echo "Application closed"
+main()

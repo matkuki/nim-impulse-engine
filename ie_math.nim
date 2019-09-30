@@ -20,7 +20,8 @@
 
 import 
     math, 
-    random
+    random,
+    nimgl/opengl
 
 
 const
@@ -29,6 +30,9 @@ const
     RAND_MAX*: float = 32767.0f
 
 
+converter float_to_fixed*(value: float32): GLfixed =
+    result = int32(value * 65535)
+    
 
 ############
 ## Vector ##
@@ -197,7 +201,7 @@ proc round*(number: float): int =
     result = int(number + 0.5f)
 
 proc random*(low, high: float): float =
-    result = random.random(RAND_MAX)
+    result = random.rand(RAND_MAX)
     result /= RAND_MAX
     result = (high - low) * result + low
 
