@@ -1,25 +1,26 @@
-
-##    Copyright (c) 2013 Randy Gaul http://RandyGaul.net
-##
-##    This software is provided 'as-is', without any express or implied
-##    warranty. In no event will the authors be held liable for any damages
-##    arising from the use of this software.
-##
-##    Permission is granted to anyone to use this software for any purpose,
-##    including commercial applications, and to alter it and redistribute it
-##    freely, subject to the following restrictions:
-##      1. The origin of this software must not be misrepresented; you must not
-##         claim that you wrote the original software. If you use this software
-##         in a product, an acknowledgment in the product documentation would be
-##         appreciated but is not required.
-##      2. Altered source versions must be plainly marked as such, and must not be
-##         misrepresented as being the original software.
-##      3. This notice may not be removed or altered from any source distribution.
-##
-##    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
+##[
+    Copyright (c) 2013 Randy Gaul http://RandyGaul.net
+    ##
+    This software is provided 'as-is', without any express or implied
+    warranty. In no event will the authors be held liable for any damages
+    arising from the use of this software.
+    ##
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+    1. The origin of this software must not be misrepresented; you must not
+        claim that you wrote the original software. If you use this software
+        in a product, an acknowledgment in the product documentation would be
+        appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+        misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+    ##
+    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
+]##
 
 import
-    ie_math,
+    iemath,
     shapes,
     manifold,
     opengl
@@ -53,9 +54,9 @@ proc integrateVelocity*(b: Body, dt: float) =
 proc step*(self: Scene, dt:float) =
     # Generate new collision info
     self.contacts = @[]
-    for i in 0..len(self.bodies)-1:
+    for i in 0..self.bodies.high:
         var A: Body = self.bodies[i]
-        for j in i+1..len(self.bodies)-1:
+        for j in i+1..self.bodies.high:
             var B: Body = self.bodies[j]
             if A.massInverse == 0 and B.massInverse == 0:
                 continue
@@ -64,53 +65,49 @@ proc step*(self: Scene, dt:float) =
             if m.contactCount != 0:
                 self.contacts.add(m)
     # Integrate forces
-    for i in 0..len(self.bodies)-1:
-        integrateForces(self.bodies[i], dt)
+    for body in self.bodies:
+        integrateForces(body, dt)
     # Initialize collision
-    for i in 0..len(self.contacts)-1:
-        self.contacts[i].initialize()
+    for manifold in self.contacts:
+        manifold.initialize()
     # Solve collisions
     for j in 0..self.mIterations-1:
-        for i in 0..len(self.contacts)-1:
-            self.contacts[i].applyImpulse()
+        for manifold in self.contacts:
+            manifold.applyImpulse()
     # Integrate velocities
-    for i in 0..len(self.bodies)-1:
-        integrateVelocity(self.bodies[i], dt)
+    for body in self.bodies:
+        integrateVelocity(body, dt)
     # Correct positions
-    for i in 0..len(self.contacts)-1:
-        self.contacts[i].positionalCorrection()
+    for manifold in self.contacts:
+        manifold.positionalCorrection()
     # Clear all forces
-    for i in 0..len(self.bodies)-1:
-        var b: Body = self.bodies[i]
-        b.force.set(0.0, 0.0)
-        b.torque = 0
+    for body in self.bodies:
+        body.force.set(0.0, 0.0)
+        body.torque = 0
 
 proc render*(self: Scene) =
-    for i in 0..len(self.bodies)-1:
+    for i in 0..self.bodies.high:
         self.bodies[i].shape.draw()
+    # Render contact points
     glPointSize(4.0f)
     glBegin(GL_POINTS);
     glColor3f(1.0f, 0.0f, 0.0f)
-    
-    for i in 0..len(self.contacts)-1:
-        var m: Manifold = self.contacts[i]
-        for j in 0..m.contactCount-1:
-            var c: Vec = m.contacts[j]
+    for manifold in self.contacts:
+        for c in manifold.contacts:
             glVertex2f(c.x, c.y)
     glEnd()
     glPointSize(1.0f)
-
+    # Render contat impulse direction lines
     glBegin(GL_LINES)
     glColor3f(0.0f, 1.0f, 0.0f)
-    for i in 0..len(self.contacts)-1:
-        var 
-            m: Manifold = self.contacts[i]
-            n: Vec = m.normal
-        for j in 0..m.contactCount-1:
-            var c: Vec = m.contacts[j]
-            glVertex2f(c.x, c.y)
+    for manifold in self.contacts:
+        var n: Vec = manifold.normal
+        for contact in manifold.contacts:
+            # Render the line startpoint
+            glVertex2f(contact.x, contact.y)
             n *= 0.75f
-            c += n
+            # Create the line endpoint and render it
+            var c = contact + n
             glVertex2f(c.x, c.y)
     glEnd()
 
@@ -119,7 +116,3 @@ proc add*(self: Scene, shape: Shape, x: float, y: float): Body =
     var b: Body = newBody(shape, x, y)
     self.bodies.add(b)
     result = b
-
-
-
-

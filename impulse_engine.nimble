@@ -1,8 +1,8 @@
 # Package
-version = "1.5.0"
+version = "1.6.0"
 author = "Matic Kukovec"
 description = "Nim port of a simple 2D physics engine"
 license = "zlib"
 
 # Deps
-requires "nim >= 0.15.0", "opengl >= 1.1.0", "x11 >= 1.0", "nim-glfw >= 0.2.1"
+requires "nim >= 1.2.0", "opengl >= 1.2.6", "x11 >= 1.0", "nim-glfw >= 3.3.4.0"

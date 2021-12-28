@@ -1,26 +1,27 @@
-
-##    Copyright (c) 2013 Randy Gaul http://RandyGaul.net
-##
-##    This software is provided 'as-is', without any express or implied
-##    warranty. In no event will the authors be held liable for any damages
-##    arising from the use of this software.
-##
-##    Permission is granted to anyone to use this software for any purpose,
-##    including commercial applications, and to alter it and redistribute it
-##    freely, subject to the following restrictions:
-##      1. The origin of this software must not be misrepresented; you must not
-##         claim that you wrote the original software. If you use this software
-##         in a product, an acknowledgment in the product documentation would be
-##         appreciated but is not required.
-##      2. Altered source versions must be plainly marked as such, and must not be
-##         misrepresented as being the original software.
-##      3. This notice may not be removed or altered from any source distribution.
-##
-##    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
+##[
+    Copyright (c) 2013 Randy Gaul http://RandyGaul.net
+    ##
+    This software is provided 'as-is', without any express or implied
+    warranty. In no event will the authors be held liable for any damages
+    arising from the use of this software.
+    ##
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+    1. The origin of this software must not be misrepresented; you must not
+        claim that you wrote the original software. If you use this software
+        in a product, an acknowledgment in the product documentation would be
+        appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+        misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+    ##
+    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
+]##
 
 import
     math,
-    ie_math,
+    iemath,
     shapes
 
 type
@@ -62,7 +63,7 @@ proc infiniteMassCorrection*(self: Manifold) =
 
 proc applyImpulse*(self: Manifold) =
     # Early out and positional correct if both objects have infinite mass
-    if ie_math.equal(self.A.massInverse + self.B.massInverse, 0):
+    if iemath.equal(self.A.massInverse + self.B.massInverse, 0):
         self.infiniteMassCorrection()
         return
     for i in 0..self.contactCount-1:
@@ -75,6 +76,7 @@ proc applyImpulse*(self: Manifold) =
                       self.A.velocity - cross(self.A.angularVelocity, ra)
             # Relative velocity along the normal
             contactVel: float = dot(rv, self.normal)
+        # Do not resolve if velocities are separating
         if contactVel > 0:
             return
         var
@@ -115,8 +117,8 @@ proc applyImpulse*(self: Manifold) =
 
 proc positionalCorrection*(self: Manifold) =
     const
-        kSlop: float = 0.05f # Penetration allowance
-        percent: float = 0.4f # Penetration percentage to correct
+        kSlop: float = 0.00001f # Penetration allowance
+        percent: float = 0.2f # Penetration percentage to correct
     var
         correction: Vec = (max(self.penetration - kSlop, 0.0f) / (self.A.massInverse + self.B.massInverse)) *
                           self.normal * percent

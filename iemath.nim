@@ -1,38 +1,39 @@
+##[
+    Copyright (c) 2013 Randy Gaul http://RandyGaul.net
+    ##
+    This software is provided 'as-is', without any express or implied
+    warranty. In no event will the authors be held liable for any damages
+    arising from the use of this software.
+    ##
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+    1. The origin of this software must not be misrepresented; you must not
+        claim that you wrote the original software. If you use this software
+        in a product, an acknowledgment in the product documentation would be
+        appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+        misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+    ##
+    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
+]##
 
-##    Copyright (c) 2013 Randy Gaul http://RandyGaul.net
-##
-##    This software is provided 'as-is', without any express or implied
-##    warranty. In no event will the authors be held liable for any damages
-##    arising from the use of this software.
-##
-##    Permission is granted to anyone to use this software for any purpose,
-##    including commercial applications, and to alter it and redistribute it
-##    freely, subject to the following restrictions:
-##      1. The origin of this software must not be misrepresented; you must not
-##         claim that you wrote the original software. If you use this software
-##         in a product, an acknowledgment in the product documentation would be
-##         appreciated but is not required.
-##      2. Altered source versions must be plainly marked as such, and must not be
-##         misrepresented as being the original software.
-##      3. This notice may not be removed or altered from any source distribution.
-##
-##    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
-
-import 
-    math, 
-    random
+import
+    math,
+    random,
+    parseutils
 
 
 const
-    PI*: float = 3.141592741f
+    PI*: float = math.PI #3.141592741f
     EPSILON*: float = 0.0001f
     RAND_MAX*: float = 32767.0f
 
 
-
-############
-## Vector ##
-############
+#[
+    Vector
+]#
 type
     Vec* = object
         x*: float
@@ -41,7 +42,7 @@ type
 proc set*(inVector: var Vec, inX: float, inY: float) =
     inVector.x = inX
     inVector.y = inY
-
+    
 proc `-`*(inVector: Vec): Vec =
     result = Vec(x: -inVector.x, y: -inVector.y)
 
@@ -101,9 +102,59 @@ proc normalize*(inVector: var Vec) =
         inVector.y *= invLen
 
 
-############
-## Matrix ##
-############
+#[
+    Color
+]#
+type
+    Color* = object
+        r: int
+        g: int
+        b: int
+        a: int
+
+proc createColor(htmlString: string): Color =
+    ##[
+        htmlString: "#RRGGBB" or "#RRGGBBAA"
+    ]##
+    if len(htmlString) != 7 and 
+       len(htmlString) != 9 and
+       htmlString[0] != '#':
+        raise newException(
+            ValueError,
+            "[Color] Incorrect html color format: " & htmlString
+        )
+    var red, green, blue, alpha: int
+    if parseInt(htmlString.substr(1, 2), red) == 0:
+        raise newException(
+            ValueError,
+            "[Color] Incorrect red html color: " & htmlString
+        )
+    elif parseInt(htmlString.substr(3, 4), green) == 0:
+        raise newException(
+            ValueError,
+            "[Color] Incorrect green html color: " & htmlString
+        )
+    elif parseInt(htmlString.substr(5, 6), blue) == 0:
+        raise newException(
+            ValueError,
+            "[Color] Incorrect blue html color: " & htmlString
+        )
+    result.r = red
+    result.g = green
+    result.b = blue
+    # Alpha channel
+    result.a = 255
+    if len(htmlString) != 9:
+        if parseInt(htmlString.substr(7, 8), alpha) == 0:
+            raise newException(
+                ValueError,
+                "[Color] Incorrect alpha html color: " & htmlString
+            )
+
+
+#[
+    Matrix
+]#
 type
     Mat* = object
         m00*: float
@@ -197,7 +248,7 @@ proc round*(number: float): int =
     result = int(number + 0.5f)
 
 proc random*(low, high: float): float =
-    result = random.random(RAND_MAX)
+    result = random.rand(RAND_MAX)
     result /= RAND_MAX
     result = (high - low) * result + low
 

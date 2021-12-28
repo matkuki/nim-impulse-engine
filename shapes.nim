@@ -1,26 +1,27 @@
-
-##    Copyright (c) 2013 Randy Gaul http://RandyGaul.net
-##
-##    This software is provided 'as-is', without any express or implied
-##    warranty. In no event will the authors be held liable for any damages
-##    arising from the use of this software.
-##
-##    Permission is granted to anyone to use this software for any purpose,
-##    including commercial applications, and to alter it and redistribute it
-##    freely, subject to the following restrictions:
-##      1. The origin of this software must not be misrepresented; you must not
-##         claim that you wrote the original software. If you use this software
-##         in a product, an acknowledgment in the product documentation would be
-##         appreciated but is not required.
-##      2. Altered source versions must be plainly marked as such, and must not be
-##         misrepresented as being the original software.
-##      3. This notice may not be removed or altered from any source distribution.
-##
-##    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
+##[
+    Copyright (c) 2013 Randy Gaul http://RandyGaul.net
+    ##
+    This software is provided 'as-is', without any express or implied
+    warranty. In no event will the authors be held liable for any damages
+    arising from the use of this software.
+    ##
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+    1. The origin of this software must not be misrepresented; you must not
+        claim that you wrote the original software. If you use this software
+        in a product, an acknowledgment in the product documentation would be
+        appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+        misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+    ##
+    Port to Nim by Matic Kukovec https://github.com/matkuki/Nim-Impulse-Engine
+]##
 
 import
     math,
-    ie_math,
+    iemath,
     opengl
 
 const
@@ -104,7 +105,7 @@ method clone*(self: Circle): Shape =
 
 method computeMass(self: Circle, density: float) =
     # Mass
-    self.body.mass = ie_math.PI * self.radius * self.radius * density
+    self.body.mass = iemath.PI * self.radius * self.radius * density
     if self.body.mass > 0.0f:
         self.body.massInverse = 1.0f / self.body.mass
     else:
@@ -129,7 +130,7 @@ method draw*(self: Circle) =
     glBegin(GL_LINE_LOOP)
     var
         theta: float = self.body.orient
-        inc = ie_math.PI * 2.0f / float(k_segments)
+        inc = iemath.PI * 2.0f / float(k_segments)
     for i in 0..k_segments-1:
         theta += inc
         var p: Vec = Vec(x: math.cos(theta), y: math.sin(theta))
@@ -175,7 +176,7 @@ method computeMass*(self: Polygon, density: float) =
             p1: Vec = self.mVertices[i1]
             i2: int = if (i1 + 1 < self.mVertexCount): i1 + 1 else: 0
             p2: Vec = self.mVertices[i2]
-            D: float = ie_math.cross(p1, p2)
+            D: float = iemath.cross(p1, p2)
             triangleArea: float = 0.5f * D
         area += triangleArea
         # Use area to weight the centroid average, not just vertex position
@@ -215,6 +216,13 @@ method draw*(self: Polygon) =
         var v: Vec = self.body.position + self.orientation * self.mVertices[i]
         glVertex2f(v.x, v.y)
     glEnd()
+    # Draw object body's center point
+    glPointSize(4.0f)
+    glBegin(GL_POINTS);
+    glColor3f(1.0f, 0.0f, 0.0f)
+    glVertex2f(self.body.position.x, self.body.position.y)
+    glEnd()
+    
 
 method getType*(self: Polygon): ShapeType =
     result = stPoly
@@ -329,15 +337,15 @@ proc newBody*[T: Shape|Circle|Polygon](shape: T, x: float, y: float): Body =
     result.velocity.set(0.0, 0.0)
     result.angularVelocity = 0.0
     result.torque = 0.0
-    result.orient = ie_math.random(-PI, PI)
+    result.orient = iemath.random(-PI, PI)
     result.force.set(0.0, 0.0)
     result.staticFriction = 0.5f
     result.dynamicFriction = 0.3f
     result.restitution = 0.2f
     shape.initialize()
-    result.r = ie_math.random(0.2f, 1.0f)
-    result.g = ie_math.random(0.2f, 1.0f)
-    result.b = ie_math.random(0.2f, 1.0f)
+    result.r = iemath.random(0.2f, 1.0f)
+    result.g = iemath.random(0.2f, 1.0f)
+    result.b = iemath.random(0.2f, 1.0f)
     
 
 proc setOrient*(self: Body, radians: float) =
