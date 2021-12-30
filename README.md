@@ -9,14 +9,13 @@ zlib license (check the License.txt file for more details)
 <br><br>
 
 ### Used libraries: ###
-- nimgl (https://nimgl.dev/)
+- nim-glfw (https://github.com/johnnovak/nim-glfw)
 - opengl (https://github.com/nim-lang/opengl)
-- x11 (https://github.com/nim-lang/x11)
-- freeglut (http://freeglut.sourceforge.net/) or glut32 on Windows
+- libdrawtext (https://github.com/jtsiomb/libdrawtext)
 
 Additional information:
-- For `nimgl` you will need the GLFW3 shared library (precompiled libraries can be found here: https://www.glfw.org/download.html)
-- For `freeglut` you will need a recent shared library (precompiled libraries can be found here: https://www.transmissionzero.co.uk/software/freeglut-devel/)
+- For `nim-glfw` you will need the GLFW3 shared library (precompiled libraries can be found here: https://www.glfw.org/download.html)
+- For `libdrawtext` you will need to compile the shared library from source and add it to your path. Follow instructions on: https://github.com/jtsiomb/libdrawtext
 <br><br>
 
 ### Installation: ###
