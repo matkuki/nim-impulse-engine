@@ -102,6 +102,44 @@ proc normalize*(inVector: var Vec) =
         inVector.x *= invLen
         inVector.y *= invLen
 
+proc computePolygonCentroid*(vertices: openarray[Vec], vertexCount: int): Vec =
+    var
+        centroid = Vec(x: 0.0, y:0)
+        signedArea = 0.0
+        x0 = 0.0 # Current vertex X
+        y0 = 0.0 # Current vertex Y
+        x1 = 0.0 # Next vertex X
+        y1 = 0.0 # Next vertex Y
+        a = 0.0  # Partial signed area
+        last = vertexCount-1
+
+    # For all vertices except last
+    for i in 0 ..< vertexCount-1:
+        x0 = vertices[i].x
+        y0 = vertices[i].y
+        x1 = vertices[i+1].x
+        y1 = vertices[i+1].y
+        a = (x0 * y1) - (x1 * y0)
+        signedArea += a
+        centroid.x += (x0 + x1) * a
+        centroid.y += (y0 + y1) * a
+    
+    # Do last vertex separately to avoid performing an expensive
+    # modulus operation in each iteration.
+    x0 = vertices[last].x
+    y0 = vertices[last].y
+    x1 = vertices[0].x
+    y1 = vertices[0].y
+    a = x0*y1 - x1*y0;
+    signedArea += a;
+    centroid.x += (x0 + x1) * a
+    centroid.y += (y0 + y1) * a
+
+    signedArea *= 0.5
+    centroid.x /= (6.0 * signedArea)
+    centroid.y /= (6.0 * signedArea)
+    result = centroid
+
 
 #[
     Color

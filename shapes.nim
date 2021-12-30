@@ -149,6 +149,12 @@ method draw*(self: Circle) =
     glVertex2f(self.body.position.x*SCALE, self.body.position.y*SCALE)
     glVertex2f(r.x*SCALE, r.y*SCALE)
     glEnd()
+    # Draw object body's center point
+    glPointSize(4.0f)
+    glBegin(GL_POINTS);
+    glColor3f(1.0f, 0.0f, 0.0f)
+    glVertex2f(self.body.position.x*SCALE, self.body.position.y*SCALE)
+    glEnd()
 
 method getType*(self: Circle): ShapeType =
     result = stCircle
@@ -212,14 +218,24 @@ method draw*(self: Polygon) =
     glColor3f(self.body.r, self.body.g, self.body.b)
     glBegin(GL_LINE_LOOP)
     for i in 0..self.mVertexCount-1:
-        var v: Vec = self.body.position + self.orientation * self.mVertices[i]
+        let v: Vec = self.body.position + self.orientation * self.mVertices[i]
+        glVertex2f(v.x*SCALE, v.y*SCALE)
+    glEnd()
+    # Draw all polygon vertices
+    glColor3f(1.0f, 0.0f, 0.0f)
+    glPointSize(2.0f)
+    glBegin(GL_POINTS)
+    for i in 0..self.mVertexCount-1:
+        let v: Vec = self.body.position + self.orientation * self.mVertices[i]
         glVertex2f(v.x*SCALE, v.y*SCALE)
     glEnd()
     # Draw object body's center point
     glPointSize(4.0f)
     glBegin(GL_POINTS);
     glColor3f(1.0f, 0.0f, 0.0f)
-    glVertex2f(self.body.position.x*SCALE, self.body.position.y*SCALE)
+    let centroid = self.body.position + 
+        (self.orientation * computePolygonCentroid(self.mVertices, self.mVertexCount))
+    glVertex2f(centroid.x*SCALE, centroid.y*SCALE)
     glEnd()
     
 
@@ -322,11 +338,10 @@ proc getSupport*(self: Polygon, dir: Vec): Vec =
             bestProjection = projection
     result = bestVertex
 
-
     
-#####################
-## Body procedures ##
-#####################
+#[
+    Body procedures
+]#
 proc newBody*[T: Shape|Circle|Polygon](shape: T, x: float, y: float): Body =
     new(result)
     result.shape = shape.clone()
