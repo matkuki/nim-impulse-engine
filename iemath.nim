@@ -29,6 +29,7 @@ const
     PI*: float = math.PI #3.141592741f
     EPSILON*: float = 0.0001f
     RAND_MAX*: float = 32767.0f
+    SCALE* = 10.0
 
 
 #[
@@ -107,12 +108,12 @@ proc normalize*(inVector: var Vec) =
 ]#
 type
     Color* = object
-        r: int
-        g: int
-        b: int
-        a: int
+        r*: float
+        g*: float
+        b*: float
+        a*: float
 
-proc createColor(htmlString: string): Color =
+proc createColor*(htmlString: string): Color =
     ##[
         htmlString: "#RRGGBB" or "#RRGGBBAA"
     ]##
@@ -124,28 +125,28 @@ proc createColor(htmlString: string): Color =
             "[Color] Incorrect html color format: " & htmlString
         )
     var red, green, blue, alpha: int
-    if parseInt(htmlString.substr(1, 2), red) == 0:
+    if parseHex(htmlString.substr(1, 2), red) == 0:
         raise newException(
             ValueError,
             "[Color] Incorrect red html color: " & htmlString
         )
-    elif parseInt(htmlString.substr(3, 4), green) == 0:
+    elif parseHex(htmlString.substr(3, 4), green) == 0:
         raise newException(
             ValueError,
             "[Color] Incorrect green html color: " & htmlString
         )
-    elif parseInt(htmlString.substr(5, 6), blue) == 0:
+    elif parseHex(htmlString.substr(5, 6), blue) == 0:
         raise newException(
             ValueError,
             "[Color] Incorrect blue html color: " & htmlString
         )
-    result.r = red
-    result.g = green
-    result.b = blue
+    result.r = red.float / 255.0
+    result.g = green.float / 255.0
+    result.b = blue.float / 255.0
     # Alpha channel
-    result.a = 255
-    if len(htmlString) != 9:
-        if parseInt(htmlString.substr(7, 8), alpha) == 0:
+    result.a = 255.float / 255.0
+    if len(htmlString) == 9:
+        if parseHex(htmlString.substr(7, 8), alpha) == 0:
             raise newException(
                 ValueError,
                 "[Color] Incorrect alpha html color: " & htmlString

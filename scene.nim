@@ -23,7 +23,8 @@ import
     iemath,
     shapes,
     manifold,
-    opengl
+    opengl,
+    data
 
 type
     Scene* = ref object of RootObj
@@ -94,21 +95,25 @@ proc render*(self: Scene) =
     glColor3f(1.0f, 0.0f, 0.0f)
     for manifold in self.contacts:
         for c in manifold.contacts:
-            glVertex2f(c.x, c.y)
+            if c.x == 0.0 and c.y == 0.0:
+                continue
+            glVertex2f(c.x*SCALE, c.y*SCALE)
     glEnd()
     glPointSize(1.0f)
-    # Render contat impulse direction lines
+    # Render contact impulse direction lines
     glBegin(GL_LINES)
     glColor3f(0.0f, 1.0f, 0.0f)
     for manifold in self.contacts:
         var n: Vec = manifold.normal
-        for contact in manifold.contacts:
+        for c in manifold.contacts:
+            if c.x == 0.0 and c.y == 0.0:
+                continue
             # Render the line startpoint
-            glVertex2f(contact.x, contact.y)
+            glVertex2f(c.x*SCALE, c.y*SCALE)
             n *= 0.75f
             # Create the line endpoint and render it
-            var c = contact + n
-            glVertex2f(c.x, c.y)
+            var contact = c + n
+            glVertex2f(contact.x*SCALE, contact.y*SCALE)
     glEnd()
 
 proc add*(self: Scene, shape: Shape, x: float, y: float): Body =

@@ -24,19 +24,44 @@ import
     shapes,
     manifold,
     opengl,
-    freetype/freetype
+#    freetype/freetype,
+    libdrawtext
 
 #[
     Freetype text drawing
 ]#
-var lib: FT_Library
+#var lib: FT_Library
+#
+#proc init_freetype*() =
+#    let result = freetype.init(lib)
+#    if result != 0:
+#        raise newException(LibraryError, "[FreeType] Initialization error!")
 
-proc init_freetype*() =
-    let result = freetype.init(lib)
-    if result != 0:
-        raise newException(LibraryError, "[FreeType] Initialization error!")
+var font: ptr dtx_font
 
-proc draw_text_opengl*(text: string,
-                       position: Vec, 
-                       color: Color) =
-    discard
+proc init*() =
+    # XXX dtx_open_font opens a font file and returns a pointer to dtx_font
+    font = dtx_open_font("SourceCodePro-Regular.ttf", 16)
+    if font == nil:
+        raise newException(LibraryError, "[libdrawtext]Failed to open font")
+    # XXX select the font and size to render with by calling dtx_use_font
+    # if you want to use a different font size, you must first call:
+    # dtx_prepare(font, size) once.
+    dtx_use_font(font, 16);
+
+proc draw_text*(text: string,
+                position: Vec,
+                color: Color) =
+    glMatrixMode(GL_PROJECTION)
+    glPushMatrix()
+    glScalef(1.0, -1.0, 1.0)
+#    let
+#        w = dtx_string_width(text)
+#        h = dtx_string_height(text)
+    glTranslatef(-4.0 + position.x, -15.0 - position.y, 0.0)
+#    glRotatef(20.0, 0.0, 0.0, 1)
+    glColor3f(color.r, color.g, color.b)
+    # XXX call dtx_string to draw utf-8 text.
+    # any transformations and the current color apply
+    dtx_string(text)
+    glPopMatrix()

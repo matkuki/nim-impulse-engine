@@ -69,10 +69,9 @@ type
         mNormals*: array[0..MaxPolyVertexCount, Vec]
 
 
-
-##########################
-## Shape methods (base) ##
-##########################
+#[
+    Shape methods (base)
+]#
 method clone*(self: Shape): Shape {.base, inline.} = 
     quit "Virtual method, must be overridden!"
 
@@ -92,9 +91,9 @@ method getType*(self: Shape): ShapeType {.base, inline.} =
     quit "Virtual method, must be overridden!"
 
 
-###############################
-## Circle procedures/methods ##
-###############################
+#[
+    Circle procedures/methods
+]#
 proc newCircle*(radius: float): Circle =
     new(result)
     new(result.body)
@@ -136,7 +135,7 @@ method draw*(self: Circle) =
         var p: Vec = Vec(x: math.cos(theta), y: math.sin(theta))
         p *= self.radius
         p += self.body.position
-        glVertex2f(p.x, p.y)
+        glVertex2f(p.x*SCALE, p.y*SCALE)
     glEnd()
     # Render line within circle so orientation is visible
     glBegin(GL_LINE_STRIP)
@@ -147,17 +146,17 @@ method draw*(self: Circle) =
     r.set(r.x * c - r.y * s, r.x * s + r.y * c)
     r *= self.radius
     r = r + self.body.position
-    glVertex2f(self.body.position.x, self.body.position.y)
-    glVertex2f(r.x, r.y)
+    glVertex2f(self.body.position.x*SCALE, self.body.position.y*SCALE)
+    glVertex2f(r.x*SCALE, r.y*SCALE)
     glEnd()
 
 method getType*(self: Circle): ShapeType =
     result = stCircle
 
 
-################################
-## Polygon procedures/methods ##
-################################
+#[
+    Polygon procedures/methods
+]#
 proc newPolygon*(): Polygon =
     new(result)
     new(result.body)
@@ -214,13 +213,13 @@ method draw*(self: Polygon) =
     glBegin(GL_LINE_LOOP)
     for i in 0..self.mVertexCount-1:
         var v: Vec = self.body.position + self.orientation * self.mVertices[i]
-        glVertex2f(v.x, v.y)
+        glVertex2f(v.x*SCALE, v.y*SCALE)
     glEnd()
     # Draw object body's center point
     glPointSize(4.0f)
     glBegin(GL_POINTS);
     glColor3f(1.0f, 0.0f, 0.0f)
-    glVertex2f(self.body.position.x, self.body.position.y)
+    glVertex2f(self.body.position.x*SCALE, self.body.position.y*SCALE)
     glEnd()
     
 

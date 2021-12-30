@@ -34,6 +34,7 @@ if defined(windows) or defined(linux):
         flags = [
             "--out:bin/impulse_engine.exe",
             "--gc:orc",
+#            "--app:gui",
             "-d:release",
             "impulse_engine.nim",
         ]

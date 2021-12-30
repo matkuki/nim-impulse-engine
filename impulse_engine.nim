@@ -22,9 +22,9 @@
 import
     os,
     strutils,
+    strformat,
     times,
     math,
-    std/bitops,
     iemath,
     shapes,
     manifold,
@@ -33,17 +33,8 @@ import
     glfw/wrapper,
     opengl,
     opengl/glu,
-    textdraw
-
-const
-    VERSION = "1.6.0"
-    WINDOW_SIZE = (w: 800, h: 600)
-    FRAME_RATE = 60.int32
-    FRAME_TIME = 1.0f/float(FRAME_RATE)
-    # If the VSYNC value is true, the FRAME_RATE has to be set to the monitor
-    # refresh rate! If it's lower, everything will move faster
-    VSYNC = true
-    LEFT_CLICK_RANDOM_POLYGONS = true
+    textdraw,
+    data
 
 var 
     done = false # Application exit flag
@@ -66,10 +57,10 @@ proc initOpenGL() =
     glPushMatrix()
     glLoadIdentity()
 
-proc mouseBtnCb(win: glfw.Window, 
-                button: MouseButton, 
-                pressed: bool,
-                modKeys: set[ModifierKey]) =
+proc mouseButtonCallback(win: glfw.Window, 
+                         button: MouseButton, 
+                         pressed: bool,
+                         modKeys: set[ModifierKey]) =
     # Get cursor position and adjust it to openGL settings
     var curPos = win.cursorPos()
     curPos.x /= 10.0f
@@ -112,9 +103,7 @@ proc mouseBtnCb(win: glfw.Window,
                     b.restitution = 0.9 #0.2f
                     b.dynamicFriction = 0.9 #0.2f
                     b.staticFriction = 0.9 #0.4f
-                echo "Polygon added"
                 bodycounter += 1
-                echo "Total number of bodies:", bodycounter
         
             of mbRight:
                 # Create random circle
@@ -123,16 +112,15 @@ proc mouseBtnCb(win: glfw.Window,
                 discard mainScene.add(c, curPos.x, curPos.y)
                 echo "Circle added"
                 bodycounter += 1
-                echo "Total number of bodies:", bodycounter
             
             else:
                 discard
 
-proc keyCb(win: glfw.Window,
-           key: Key,
-           scanCode: int32, 
-           action: KeyAction,
-           modKeys: set[ModifierKey]) =
+proc keyCallback(win: glfw.Window,
+                 key: Key,
+                 scanCode: int32, 
+                 action: KeyAction,
+                 modKeys: set[ModifierKey]) =
     # Filter only keyUp events
     if action != kaUp:
         case key:
@@ -156,6 +144,16 @@ proc keyCb(win: glfw.Window,
 
 proc physicsLoop() =
     glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+    
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+#    glOrtho(0.0f, WINDOW_SIZE.w.float, WINDOW_SIZE.h.float, 0.0f, 0.0f, 1.0f)
+#    glOrtho(-WINDOW_SIZE.w.float/2.0, WINDOW_SIZE.w.float/2.0, -WINDOW_SIZE.h.float/2.0, WINDOW_SIZE.h.float/2.0, -1.0f, 1.0f)
+    glOrtho(0, WINDOW_SIZE.w.float, WINDOW_SIZE.h.float, 0.0, 0.0f, 1.0f)
+
+    glViewport(0, 0, WINDOW_SIZE.w.int32, WINDOW_SIZE.h.int32)
+#    glFrustum(-1.0, WINDOW_SIZE.w.float, -1.0, WINDOW_SIZE.h.float, 1.0, 10.0)
+    
     # Continuous or single step
     if frameStepping == false:
         mainScene.step(FRAME_TIME)
@@ -165,11 +163,23 @@ proc physicsLoop() =
             mainScene.step(FRAME_TIME)
     mainScene.render()
 
+proc textLoop() =
+    let text_list = [
+        fmt"Total number of bodies: {bodycounter}",
+        "Left-click to spawn a polygon",
+        "Right-click to spawn a circle",
+    ]
+    textdraw.draw_text(
+        text_list.join("\n"),
+        Vec(x: 10, y: 10),
+        createColor("#7070cb")
+    )
+
 proc main() =
     # Initialize GLFW
     glfw.initialize()
-    # Initialize Freetype
-    textdraw.init_freetype()
+    # Initialize text drawing
+    textdraw.init()
     # Initialize the main window
     var window_options = DefaultOpenglWindowConfig
     window_options.size = (w: WINDOW_SIZE.w, h: WINDOW_SIZE.h)
@@ -202,8 +212,8 @@ proc main() =
     setControlCHook(proc() {.noconv.} = done = true)
     
     # Set up event handlers, context and openGL
-    win.mouseButtonCb = mouseBtnCb
-    win.keyCb = keyCb
+    win.mouseButtonCb = mouseButtonCallback
+    win.keyCb = keyCallback
     win.makeContextCurrent()
     initOpenGL()
     # Set the swap interval for the current context:
@@ -246,7 +256,10 @@ proc main() =
             ## This consumes 100% of one CPU core on Windows OS, until another application
             ## needs more of the CPU (it seems to be a Windows driver issue). Once the
             ## CPU usage falls, it stays at the correct level!
-            physicsLoop() # Impulse engine routine
+            # Impulse engine routine
+            physicsLoop()
+            # Draw diagnostic text
+            textLoop()
             # Buffer swap + event poll.
             win.swapBuffers()
             glfw.pollEvents()
@@ -254,7 +267,10 @@ proc main() =
             ## If someone knows a better delay mechanism,
             ## please contact me or open an issue on Github!
             glfw.setTime(0)
-            physicsLoop() # Impulse engine routine
+            # Impulse engine routine
+            physicsLoop()
+            # Draw diagnostic text
+            textLoop()
             # Buffer swap + event poll.
             win.swapBuffers()
             glfw.pollEvents()
