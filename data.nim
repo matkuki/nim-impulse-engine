@@ -20,7 +20,7 @@
 ]##
 
 const
-    VERSION* = "1.6.1"
+    VERSION* = "1.6.2"
     WINDOW_SIZE* = (w: 800, h: 600)
     FRAME_RATE* = 60.int32
     FRAME_TIME* = 1.0f/float(FRAME_RATE)

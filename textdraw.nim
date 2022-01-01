@@ -20,6 +20,7 @@
 ]##
 
 import
+    data,
     iemath,
     shapes,
     manifold,
@@ -58,6 +59,7 @@ proc draw_text*(text: string,
 #    let
 #        w = dtx_string_width(text)
 #        h = dtx_string_height(text)
+#    echo w, " ", h
     glTranslatef(-4.0 + position.x, -15.0 - position.y, 0.0)
 #    glRotatef(20.0, 0.0, 0.0, 1)
     glColor3f(color.r, color.g, color.b)

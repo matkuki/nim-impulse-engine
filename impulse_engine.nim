@@ -45,6 +45,8 @@ var
     mainScene = newScene(5)
     videoMode: glfw.VideoMode
     bodyCounter: int = 0
+    viewScale = 0.0
+    adjustedWindowSize: tuple[w: float, h: float]
 
 
 proc initOpenGL() = 
@@ -65,6 +67,14 @@ proc mouseButtonCallback(win: glfw.Window,
     var curPos = win.cursorPos()
     curPos.x /= 10.0f
     curPos.y /= 10.0f
+    # Adjust position depending on the view scale
+    let
+        xRatio = adjustedWindowSize.w / WINDOW_SIZE.w.float
+        yRatio = adjustedWindowSize.h / WINDOW_SIZE.h.float
+    curPos.x *= xRatio
+    curPos.y *= yRatio
+    curPos.x += ((WINDOW_SIZE.w.float - adjustedWindowSize.w) / 2.0) / 10.0
+    curPos.y += ((WINDOW_SIZE.h.float - adjustedWindowSize.h) / 2.0) / 10.0
     # Filter only mouse press events
     if pressed == true:
         case button:
@@ -96,7 +106,6 @@ proc mouseButtonCallback(win: glfw.Window,
                     vertices[1].set(e, -e)
                     vertices[2].set(e, e)
                     vertices[3].set(-e, e)
-                    echo vertices[0], " ", vertices[1], " ", vertices[2], " ", vertices[3]
                     poly.set(vertices, vertices.len())
                     b = mainScene.add(poly, curPos.x, curPos.y)
                     b.setOrient(0.0) #(iemath.random(-iemath.PI, iemath.PI))
@@ -110,11 +119,51 @@ proc mouseButtonCallback(win: glfw.Window,
                 var
                     c: Circle = newCircle(iemath.random(1.0f, 3.0f))
                 discard mainScene.add(c, curPos.x, curPos.y)
-                echo "Circle added"
                 bodycounter += 1
             
             else:
                 discard
+
+proc setScale(newOffset: float) =
+    # Set the scale
+    viewScale -= newOffset
+    if viewScale < -200:
+        viewScale = -200
+
+proc setView() =
+    const ratio = float(WINDOW_SIZE.w / WINDOW_SIZE.h)
+    var offset: Vec
+    offset.x = viewScale * 10 * ratio
+    offset.y = viewScale * 10
+    # Reinitialize the viewport
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+#    glViewport(-int32(offset.x/2), -int32(offset.y/2), int32(WINDOW_SIZE.w.float + offset.x), int32(WINDOW_SIZE.h.float + offset.y))
+#    glOrtho(-offset.x, WINDOW_SIZE.w.float+offset.x, WINDOW_SIZE.h.float+offset.y, -offset.y, 0.0f, 1.0f)
+    
+    if viewScale > 0:
+        glViewport(-int32(offset.x/2), -int32(offset.y/2), int32(WINDOW_SIZE.w.float + offset.x), int32(WINDOW_SIZE.h.float + offset.y))
+        glOrtho(0, WINDOW_SIZE.w.float, WINDOW_SIZE.h.float, 0, viewScale, -1.0f)
+        adjustedWindowSize = (
+            w: (WINDOW_SIZE.w.float),
+            h: (WINDOW_SIZE.h.float),
+        )
+    else:
+        var
+            x = -offset.x
+            y = -offset.y
+            wx = -offset.x
+            hy = -offset.y
+        glViewport(0, 0, WINDOW_SIZE.w.int32, WINDOW_SIZE.h.int32)
+        glOrtho(-x, WINDOW_SIZE.w.float+wx, WINDOW_SIZE.h.float+hy, -y, 0.0f, 1.0f)
+        adjustedWindowSize = (
+            w: (x + WINDOW_SIZE.w.float+wx),
+            h: (y + WINDOW_SIZE.h.float+hy),
+        )
+
+proc scrollCallback(win: glfw.Window,
+                    pos: tuple[x: float64, y: float64]) =
+    setScale(pos.y)
 
 proc keyCallback(win: glfw.Window,
                  key: Key,
@@ -126,33 +175,43 @@ proc keyCallback(win: glfw.Window,
         case key:
             of keyEscape:
                 win.shouldClose = true
+            
             of keyF4:
                 if mkAlt in modKeys:
                     win.shouldClose = true
+            
             of keyF:
                 frameStepping = not frameStepping
+            
+            of keyR:
+                viewScale = 0.0
+                setView()
+            
             of keyRight:
                 mainScene.bodies[mainScene.bodies.high].velocity += Vec(x:2.0f, y:0.0f)
+            
             of keyLeft:
                 mainScene.bodies[mainScene.bodies.high].velocity -= Vec(x:2.0f, y:0.0f)
+            
             of keyUp:
                 mainScene.bodies[mainScene.bodies.high].velocity += Vec(x:0.0f, y: -5.0f)
+            
             of keySpace:
                 canStep = true
+            
             else:
                 discard
 
-proc physicsLoop() =
+proc initView() =
     glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-    
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-#    glOrtho(0.0f, WINDOW_SIZE.w.float, WINDOW_SIZE.h.float, 0.0f, 0.0f, 1.0f)
-#    glOrtho(-WINDOW_SIZE.w.float/2.0, WINDOW_SIZE.w.float/2.0, -WINDOW_SIZE.h.float/2.0, WINDOW_SIZE.h.float/2.0, -1.0f, 1.0f)
     glOrtho(0, WINDOW_SIZE.w.float, WINDOW_SIZE.h.float, 0.0, 0.0f, 1.0f)
-
     glViewport(0, 0, WINDOW_SIZE.w.int32, WINDOW_SIZE.h.int32)
-#    glFrustum(-1.0, WINDOW_SIZE.w.float, -1.0, WINDOW_SIZE.h.float, 1.0, 10.0)
+
+proc physicsLoop() =
+    glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+    setView()
     
     # Continuous or single step
     if frameStepping == false:
@@ -166,8 +225,12 @@ proc physicsLoop() =
 proc textLoop() =
     let text_list = [
         fmt"Total number of bodies: {bodycounter}",
+        fmt"View-scaling: {viewScale}",
         "Left-click to spawn a polygon",
         "Right-click to spawn a circle",
+        "Mouse-wheel to change perspective",
+        "R to reset perspective",
+        "Esc to quit",
     ]
     textdraw.draw_text(
         text_list.join("\n"),
@@ -214,6 +277,7 @@ proc main() =
     # Set up event handlers, context and openGL
     win.mouseButtonCb = mouseButtonCallback
     win.keyCb = keyCallback
+    win.scrollCb = scrollCallback
     win.makeContextCurrent()
     initOpenGL()
     # Set the swap interval for the current context:
@@ -223,6 +287,9 @@ proc main() =
         glfw.swapInterval(1)
     else:
         glfw.swapInterval(0)
+    
+    # Initialize view
+    initView()
     
     # Initialize static(immovable) objects in the scene
     var b: Body
